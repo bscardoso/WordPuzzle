@@ -24,6 +24,25 @@ namespace WordPuzzleTests
         }
 
         [TestMethod]
+        public void TestGetValidLongerSolution()
+        {
+            // Arrange & Act
+            WordPuzzle.WordUtil util = new WordPuzzle.WordUtil("baby", "feel", "./words/words-english.txt", "output-answer.txt");
+
+            var result = util.GetShortestWordPuzzleSolution();
+
+            // Assert
+            Assert.AreEqual(7, result.Count);
+            Assert.AreEqual("baby", result[0]);
+            Assert.AreEqual("babe", result[1]);
+            Assert.AreEqual("bale", result[2]);
+            Assert.AreEqual("ball", result[3]);
+            Assert.AreEqual("bell", result[4]);
+            Assert.AreEqual("fell", result[5]);
+            Assert.AreEqual("feel", result[6]);
+        }
+
+        [TestMethod]
         public void TestGetSolutionNotFound()
         {
             // Arrange & Act
