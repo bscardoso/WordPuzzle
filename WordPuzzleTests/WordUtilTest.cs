@@ -24,6 +24,23 @@ namespace WordPuzzleTests
         }
 
         [TestMethod]
+        public void TestGetValidShortReverseSolution()
+        {
+            // Arrange & Act
+            WordPuzzle.WordUtil util = new WordPuzzle.WordUtil("cost", "same", "./words/words-english.txt", "output-answer.txt");
+
+            var result = util.GetShortestWordPuzzleSolution();
+
+            // Assert
+            Assert.AreEqual(5, result.Count);
+            Assert.AreEqual("cost", result[0]);
+            Assert.AreEqual("cast", result[1]);
+            Assert.AreEqual("case", result[2]);
+            Assert.AreEqual("came", result[3]);
+            Assert.AreEqual("same", result[4]);
+        }
+
+        [TestMethod]
         public void TestGetValidLongerSolution()
         {
             // Arrange & Act
