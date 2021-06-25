@@ -47,9 +47,7 @@ namespace WordPuzzle
             }
 
             // Load words from provided file
-            WordsList = File.ReadAllLines(WordsFile).ToList()
-                                                    .Distinct()
-                                                    .Where(word => word.Length == 4)
+            WordsList = File.ReadAllLines(WordsFile).Where(word => word.Length == 4).Distinct()
                                                     .ToDictionary(g => g, g => 1);
 
             // Validate Start Word
