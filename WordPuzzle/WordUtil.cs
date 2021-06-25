@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -9,26 +10,87 @@ namespace WordPuzzle
     {
         public string StartWord { get; set; }
         public string EndWord { get; set; }
-        public List<string> WordsList { get; set; }
+        public string WordsFile { get; set; }
+        public string AnswerFile { get; set; }
+        public Dictionary<string, int> WordsList { get; set; }
+        public List<string> FinalSolution { get; set; }
 
-        public WordUtil(string startWord, string endWord, List<string> wordsList)
+        public WordUtil(string startWord, string endWord, string wordsFile, string answerFile)
         {
             StartWord = startWord;
             EndWord = endWord;
-            WordsList = wordsList;
+            WordsFile = wordsFile;
+            AnswerFile = answerFile;
+            FinalSolution = new List<string>();
+
+            ValidateArgumentsAndLoadDictionary();
         }
 
         /// <summary>
-        /// Gets the solution for the word puzzle
+        /// Validates the provided arguments and returns the list of words in the provided dictionary
+        /// </summary>
+        /// <param name="startWord"></param>
+        /// <param name="endWord"></param>
+        /// <param name="wordsFile"></param>
+        /// <param name="answerFile"></param>
+        /// <returns></returns>
+        private void ValidateArgumentsAndLoadDictionary()
+        {
+            if (string.IsNullOrWhiteSpace(WordsFile) || !File.Exists(WordsFile))
+            {
+                throw new Exception("The dictionary file should be provided.");
+            }
+
+            if (string.IsNullOrWhiteSpace(AnswerFile))
+            {
+                throw new Exception("The answer file name should be provided.");
+            }
+
+            // Load words from provided file
+            WordsList = File.ReadAllLines(WordsFile).ToList()
+                                                    .Distinct()
+                                                    .Where(word => word.Length == 4)
+                                                    .ToDictionary(g => g, g => 1);
+
+            // Validate Start Word
+            if (StartWord.Length != 4)
+            {
+                throw new Exception("The start word should be 4 characters long.");
+            }
+            else if (!WordsList.ContainsKey(StartWord))
+            {
+                throw new Exception("The start word is not in the provided word list.");
+            }
+
+            // Validate End Word
+            if (EndWord.Length != 4)
+            {
+                throw new Exception("The end word should be 4 characters long.");
+            }
+            else if (!WordsList.ContainsKey(EndWord))
+            {
+                throw new Exception("The end word is not in the provided word list.");
+            }
+        }
+
+        /// <summary>
+        /// Gets the shortest solution for the word puzzle (list of words that require less changes to go from the start word to the end word)
         /// </summary>
         /// <returns>List of strings for the solution</returns>
-        public List<string> GetSolution()
+        public List<string> GetShortestWordPuzzleSolution()
         {
             var wordMovements = LoadWordMovements(WordsList);
 
             var results = FindWordPuzzleSolutions(wordMovements, StartWord, EndWord);
 
-            return results.Where(x => x.Item2.Contains(EndWord)).OrderBy(x => x.Item1).First().Item2;
+            if (!results.Any())
+            {
+                throw new Exception("No solution found for the provided word puzzle.");
+            }
+
+            FinalSolution = results.Where(x => x.Item2.Contains(EndWord)).OrderBy(x => x.Item1).First().Item2;
+
+            return FinalSolution;
         }
 
         /// <summary>
@@ -37,21 +99,21 @@ namespace WordPuzzle
         /// <param name="currentWord"></param>
         /// <param name="wordsList"></param>
         /// <returns>List of words</returns>
-        public static List<string> GetNextWordsList(string currentWord, List<string> wordsList)
+        public List<string> GetNextWordsList(string currentWord, Dictionary<string, int> wordsList)
         {
             var nextWords = new List<string>();
 
             foreach (var word in wordsList)
             {
-                if (nextWords.Contains(word))
+                if (nextWords.Contains(word.Key))
                 {
                     continue;
                 }
 
                 int differences = 0;
-                for (int i = 0; i < word.Length; i++)
+                for (int i = 0; i < word.Key.Length; i++)
                 {
-                    if (word[i] != currentWord[i])
+                    if (word.Key[i] != currentWord[i])
                     {
                         differences++;
                     }
@@ -63,7 +125,7 @@ namespace WordPuzzle
 
                 if (differences == 1)
                 {
-                    nextWords.Add(word);
+                    nextWords.Add(word.Key);
                 }
             }
 
@@ -75,14 +137,14 @@ namespace WordPuzzle
         /// </summary>
         /// <param name="wordsList"></param>
         /// <returns>List of words possible movements</returns>
-        public static List<Word> LoadWordMovements(List<string> wordsList)
+        public List<Word> LoadWordMovements(Dictionary<string, int> wordsList)
         {
             var wordMovements = new List<Word>();
 
             foreach (var word in wordsList)
             {
-                var nextWords = GetNextWordsList(word, wordsList);
-                wordMovements.Add(new Word() { WordString = word, NextWords = nextWords });
+                var nextWords = GetNextWordsList(word.Key, wordsList);
+                wordMovements.Add(new Word() { WordString = word.Key, NextWords = nextWords });
             }
 
             return wordMovements;
@@ -95,7 +157,7 @@ namespace WordPuzzle
         /// <param name="startWord"></param>
         /// <param name="endWord"></param>
         /// <returns>List of valid movements aka possible solutions</returns>
-        public static List<Tuple<int, List<string>>> FindWordPuzzleSolutions(List<Word> wordMovements, string startWord, string endWord)
+        public List<Tuple<int, List<string>>> FindWordPuzzleSolutions(List<Word> wordMovements, string startWord, string endWord)
         {
             var results = new List<Tuple<int, List<string>>>();
             var solution = new List<string>();
@@ -158,7 +220,7 @@ namespace WordPuzzle
                         solution.Add(startWord);
                         solution.Add(first);
                         solution.Add(second);
-                        
+
                         if (!solution.Contains(third))
                         {
                             solution.Add(third);
@@ -189,7 +251,7 @@ namespace WordPuzzle
                             solution.Add(first);
                             solution.Add(second);
                             solution.Add(third);
-                            
+
                             if (!solution.Contains(fourth))
                             {
                                 solution.Add(fourth);
@@ -221,7 +283,7 @@ namespace WordPuzzle
                                 solution.Add(second);
                                 solution.Add(third);
                                 solution.Add(fourth);
-                                
+
                                 if (!solution.Contains(fifth))
                                 {
                                     solution.Add(fifth);
@@ -254,7 +316,7 @@ namespace WordPuzzle
                                     solution.Add(third);
                                     solution.Add(fourth);
                                     solution.Add(fifth);
-                                    
+
                                     if (!solution.Contains(sixth))
                                     {
                                         solution.Add(sixth);
@@ -288,7 +350,7 @@ namespace WordPuzzle
                                         solution.Add(fourth);
                                         solution.Add(fifth);
                                         solution.Add(sixth);
-                                        
+
                                         if (!solution.Contains(seventh))
                                         {
                                             solution.Add(seventh);
