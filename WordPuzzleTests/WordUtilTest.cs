@@ -1,65 +1,30 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using System;
 
 namespace WordPuzzleTests
 {
-    [TestClass]
     public class WordUtilTest
     {
-        [TestMethod]
-        public void TestGetValidShortSolution()
+        [TestCase("same", "cost", new string[5] { "same", "came", "case", "cast", "cost" })]
+        [TestCase("cost", "same", new string[5] { "cost", "cast", "case", "came", "same" })]
+        [TestCase("baby", "feel", new string[7] { "baby", "babe", "bale", "ball", "bell", "fell", "feel" })]
+        public void TestGetValidSolution(string startWord, string endWord, string[] solution)
         {
             // Arrange & Act
-            WordPuzzle.WordUtil util = new WordPuzzle.WordUtil("same", "cost", "./words/words-english.txt", "output-answer.txt");
+            WordPuzzle.WordUtil util = new WordPuzzle.WordUtil(startWord, endWord, "./words/words-english.txt", "output-answer.txt");
 
             util.GetShortestWordPuzzleSolution();
 
             // Assert
-            Assert.AreEqual(5, util.FinalSolution.Count);
-            Assert.AreEqual("same", util.FinalSolution[0]);
-            Assert.AreEqual("came", util.FinalSolution[1]);
-            Assert.AreEqual("case", util.FinalSolution[2]);
-            Assert.AreEqual("cast", util.FinalSolution[3]);
-            Assert.AreEqual("cost", util.FinalSolution[4]);
+            Assert.AreEqual(solution.Length, util.FinalSolution.Count);
+
+            for (int i = 0; i < solution.Length; i++)
+            {
+                Assert.AreEqual(solution[i], util.FinalSolution[i]);
+            }
         }
 
-        [TestMethod]
-        public void TestGetValidShortReverseSolution()
-        {
-            // Arrange & Act
-            WordPuzzle.WordUtil util = new WordPuzzle.WordUtil("cost", "same", "./words/words-english.txt", "output-answer.txt");
-
-            util.GetShortestWordPuzzleSolution();
-
-            // Assert
-            Assert.AreEqual(5, util.FinalSolution.Count);
-            Assert.AreEqual("cost", util.FinalSolution[0]);
-            Assert.AreEqual("cast", util.FinalSolution[1]);
-            Assert.AreEqual("case", util.FinalSolution[2]);
-            Assert.AreEqual("came", util.FinalSolution[3]);
-            Assert.AreEqual("same", util.FinalSolution[4]);
-        }
-
-        [TestMethod]
-        public void TestGetValidLongerSolution()
-        {
-            // Arrange & Act
-            WordPuzzle.WordUtil util = new WordPuzzle.WordUtil("baby", "feel", "./words/words-english.txt", "output-answer.txt");
-
-            util.GetShortestWordPuzzleSolution();
-
-            // Assert
-            Assert.AreEqual(7, util.FinalSolution.Count);
-            Assert.AreEqual("baby", util.FinalSolution[0]);
-            Assert.AreEqual("babe", util.FinalSolution[1]);
-            Assert.AreEqual("bale", util.FinalSolution[2]);
-            Assert.AreEqual("ball", util.FinalSolution[3]);
-            Assert.AreEqual("bell", util.FinalSolution[4]);
-            Assert.AreEqual("fell", util.FinalSolution[5]);
-            Assert.AreEqual("feel", util.FinalSolution[6]);
-        }
-
-        [TestMethod]
+        [TestCase]
         public void TestGetSolutionNotFound()
         {
             // Arrange & Act
@@ -70,8 +35,22 @@ namespace WordPuzzleTests
             util.WordsList.Add("same", 1);
 
             // Assert
-            Exception ex = Assert.ThrowsException<Exception>(() => util.GetShortestWordPuzzleSolution());
+            Exception ex = Assert.Throws<Exception>(() => util.GetShortestWordPuzzleSolution());
             Assert.AreEqual("No solution found for the provided word puzzle.", ex.Message);
+        }
+
+        [TestCase("", "", "./words/words-english.txt", "output-answer.txt", "The start word and end word should be 4 characters long.")]
+        [TestCase("", "cost", "./words/words-english.txt", "output-answer.txt", "The start word should be 4 characters long.")]
+        [TestCase("same", "", "./words/words-english.txt", "output-answer.txt", "The end word should be 4 characters long.")]
+        [TestCase("same", "cost", "", "output-answer.txt", "The dictionary file should be provided.")]
+        [TestCase("", "", "./words/words-english.txt", "output-answer.txt", "The start word and end word should be 4 characters long.")]
+        [TestCase("ZZZZ", "cost", "./words/words-english.txt", "./words/words-english.txt", "The start word is not in the provided word list.")]
+        [TestCase("same", "ZZZZ", "./words/words-english.txt", "./words/words-english.txt", "The end word is not in the provided word list.")]
+        public void TestValidationFailed(string startWord, string endWord, string dictionaryFile, string outputFile, string errorMessage)
+        {
+            // Arrange & Act & Assert
+            Exception ex = Assert.Throws<Exception>(() => new WordPuzzle.WordUtil(startWord, endWord, dictionaryFile, outputFile));
+            Assert.AreEqual(errorMessage, ex.Message);
         }
     }
 }

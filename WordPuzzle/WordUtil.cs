@@ -47,6 +47,12 @@ namespace WordPuzzle
             WordsList = File.ReadAllLines(WordsFile).Where(word => word.Length == 4).Distinct()
                                                     .ToDictionary(g => g, g => 1);
 
+            // Validate Start and End Word
+            if (StartWord.Length != 4 && EndWord.Length != 4)
+            {
+                throw new Exception("The start word and end word should be 4 characters long.");
+            }
+
             // Validate Start Word
             if (StartWord.Length != 4)
             {
