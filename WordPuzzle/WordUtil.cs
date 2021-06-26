@@ -201,24 +201,11 @@ namespace WordPuzzle
 
                 if (word == EndWord)
                 {
-                    // End word found
-                    if (FinalSolution.Any())
-                    {
-                        if (solution.Count < FinalSolution.Count)
-                        {
-                            FinalSolution = new List<string>(solution);
+                    // Shortest solution found here!
+                    FinalSolution = new List<string>(solution);
 
-                            solution.RemoveAt(solution.Count - 1);
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        FinalSolution = new List<string>(solution);
-
-                        solution.RemoveAt(solution.Count - 1);
-                        break;
-                    }
+                    solution.RemoveAt(solution.Count - 1);
+                    return;
                 }
                 else
                 {

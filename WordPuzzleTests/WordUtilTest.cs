@@ -7,7 +7,7 @@ namespace WordPuzzleTests
     {
         [TestCase("same", "cost", new string[5] { "same", "came", "case", "cast", "cost" })]
         [TestCase("cost", "same", new string[5] { "cost", "cast", "case", "came", "same" })]
-        [TestCase("baby", "feel", new string[7] { "baby", "babe", "bale", "ball", "bell", "fell", "feel" })]
+        [TestCase("baby", "feel", new string[7] { "baby", "babe", "bale", "ball", "fall", "fell", "feel" })]
         public void TestGetValidSolution(string startWord, string endWord, string[] solution)
         {
             // Arrange & Act
