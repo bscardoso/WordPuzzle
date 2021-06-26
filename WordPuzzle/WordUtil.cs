@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace WordPuzzle
 {
@@ -13,6 +13,7 @@ namespace WordPuzzle
         public string WordsFile { get; set; }
         public string AnswerFile { get; set; }
         public Dictionary<string, int> WordsList { get; set; }
+        public List<Word> WordMovements { get; set; }
         public List<string> FinalSolution { get; set; }
 
         public WordUtil(string startWord, string endWord, string wordsFile, string answerFile)
@@ -21,6 +22,7 @@ namespace WordPuzzle
             EndWord = endWord;
             WordsFile = wordsFile;
             AnswerFile = answerFile;
+            WordMovements = new List<Word>();
             FinalSolution = new List<string>();
 
             ValidateArgumentsAndLoadDictionary();
@@ -29,11 +31,6 @@ namespace WordPuzzle
         /// <summary>
         /// Validates the provided arguments and returns the list of words in the provided dictionary
         /// </summary>
-        /// <param name="startWord"></param>
-        /// <param name="endWord"></param>
-        /// <param name="wordsFile"></param>
-        /// <param name="answerFile"></param>
-        /// <returns></returns>
         private void ValidateArgumentsAndLoadDictionary()
         {
             if (string.IsNullOrWhiteSpace(WordsFile) || !File.Exists(WordsFile))
@@ -74,21 +71,16 @@ namespace WordPuzzle
         /// <summary>
         /// Gets the shortest solution for the word puzzle (list of words that require less changes to go from the start word to the end word)
         /// </summary>
-        /// <returns>List of strings for the solution</returns>
-        public List<string> GetShortestWordPuzzleSolution()
+        public void GetShortestWordPuzzleSolution()
         {
-            var wordMovements = LoadWordMovements(WordsList);
+            LoadWordMovements(WordsList);
 
-            var results = FindWordPuzzleSolutions(wordMovements, StartWord, EndWord);
+            FindWordPuzzleSolutions();
 
-            if (!results.Any())
+            if (!FinalSolution.Any())
             {
                 throw new Exception("No solution found for the provided word puzzle.");
             }
-
-            FinalSolution = results.Where(x => x.Item2.Contains(EndWord)).OrderBy(x => x.Item1).First().Item2;
-
-            return FinalSolution;
         }
 
         /// <summary>
@@ -135,243 +127,101 @@ namespace WordPuzzle
         /// </summary>
         /// <param name="wordsList"></param>
         /// <returns>List of words possible movements</returns>
-        public List<Word> LoadWordMovements(Dictionary<string, int> wordsList)
+        public void LoadWordMovements(Dictionary<string, int> wordsList)
         {
-            var wordMovements = new List<Word>();
-
             foreach (var word in wordsList)
             {
                 var nextWords = GetNextWordsList(word.Key, wordsList);
-                wordMovements.Add(new Word() { WordString = word.Key, NextWords = nextWords });
+                WordMovements.Add(new Word() { WordString = word.Key, NextWords = nextWords });
             }
-
-            return wordMovements;
         }
 
         /// <summary>
         /// Find all the possible movements until we reach the end word
         /// </summary>
-        /// <param name="wordMovements"></param>
-        /// <param name="startWord"></param>
-        /// <param name="endWord"></param>
-        /// <returns>List of valid movements aka possible solutions</returns>
-        public List<Tuple<int, List<string>>> FindWordPuzzleSolutions(List<Word> wordMovements, string startWord, string endWord)
+        public void FindWordPuzzleSolutions()
         {
-            var results = new List<Tuple<int, List<string>>>();
             var solution = new List<string>();
 
             // Get the first level (movements from the startWord)
-            var firstLevel = wordMovements.First(w => w.WordString == startWord).NextWords;
+            var nextWords = WordMovements.First(w => w.WordString == StartWord).NextWords;
 
-            foreach (var first in firstLevel)
+            int maximumDepth = 5;
+
+            do
             {
-                solution.Clear();
-                solution.Add(startWord);
-                solution.Add(first);
-
-                if (first == endWord)
-                {
-                    results.Add(new Tuple<int, List<string>>(solution.Count, new List<string>(solution)));
-                    return results;
-                }
-
-                if (results.Any(r => r.Item1 < 3))
-                {
-                    break;
-                }
-
-                // Get the second level (movements from the first level)
-                var secondLevel = wordMovements.First(w => w.WordString == first).NextWords;
-
-                foreach (var second in secondLevel)
+                foreach (var word in nextWords)
                 {
                     solution.Clear();
-                    solution.Add(startWord);
-                    solution.Add(first);
+                    solution.Add(StartWord);
+                    solution.Add(word);
 
-                    if (!solution.Contains(second))
+                    FindEndWord(word, ref solution, maximumDepth);
+                }
+
+                maximumDepth++;
+            } while (!FinalSolution.Any() && nextWords.Any());
+        }
+
+        /// <summary>
+        /// Recursive function to find the solution increasing the depth
+        /// </summary>
+        /// <param name="currentWord"></param>
+        /// <param name="solution"></param>
+        /// <param name="maximumDepth"></param>
+        private void FindEndWord(string currentWord, ref List<string> solution, int maximumDepth)
+        {
+            if (solution.Count > maximumDepth)
+            {
+                // Limiting the level increasing 1 at a time until we reach the shortest solution path
+                return;
+            }
+
+            var nextWords = WordMovements.First(w => w.WordString == currentWord).NextWords;
+
+            foreach (var word in nextWords)
+            {
+                if ((FinalSolution.Any() && solution.Count >= FinalSolution.Count))
+                {
+                    return;
+                }
+
+                if (word != EndWord && solution.Contains(word))
+                {
+                    continue;
+                }
+
+                solution.Add(word);
+
+                if (word == EndWord)
+                {
+                    // End word found
+                    if (FinalSolution.Any())
                     {
-                        solution.Add(second);
+                        if (solution.Count < FinalSolution.Count)
+                        {
+                            FinalSolution = new List<string>(solution);
+
+                            solution.RemoveAt(solution.Count - 1);
+                            break;
+                        }
                     }
                     else
                     {
-                        continue;
-                    }
+                        FinalSolution = new List<string>(solution);
 
-                    if (second == endWord)
-                    {
-                        results.Add(new Tuple<int, List<string>>(solution.Count, new List<string>(solution)));
+                        solution.RemoveAt(solution.Count - 1);
                         break;
-                    }
-
-                    if (results.Any(r => r.Item1 < 4))
-                    {
-                        break;
-                    }
-
-                    // Get the third level (movements from the second level)
-                    var thirdLevel = wordMovements.First(w => w.WordString == second).NextWords;
-
-                    foreach (var third in thirdLevel)
-                    {
-                        solution.Clear();
-                        solution.Add(startWord);
-                        solution.Add(first);
-                        solution.Add(second);
-
-                        if (!solution.Contains(third))
-                        {
-                            solution.Add(third);
-                        }
-                        else
-                        {
-                            continue;
-                        }
-
-                        if (third == endWord)
-                        {
-                            results.Add(new Tuple<int, List<string>>(solution.Count, new List<string>(solution)));
-                            break;
-                        }
-
-                        if (results.Any(r => r.Item1 < 5))
-                        {
-                            break;
-                        }
-
-                        // Get the fourth level (movements from the third level)
-                        var fourthLevel = wordMovements.First(w => w.WordString == third).NextWords;
-
-                        foreach (var fourth in fourthLevel)
-                        {
-                            solution.Clear();
-                            solution.Add(startWord);
-                            solution.Add(first);
-                            solution.Add(second);
-                            solution.Add(third);
-
-                            if (!solution.Contains(fourth))
-                            {
-                                solution.Add(fourth);
-                            }
-                            else
-                            {
-                                continue;
-                            }
-
-                            if (fourth == endWord)
-                            {
-                                results.Add(new Tuple<int, List<string>>(solution.Count, new List<string>(solution)));
-                                break;
-                            }
-
-                            if (results.Any(r => r.Item1 < 6))
-                            {
-                                break;
-                            }
-
-                            // Get the fifth level (movements from the fourth level)
-                            var fifthLevel = wordMovements.First(w => w.WordString == fourth).NextWords;
-
-                            foreach (var fifth in fifthLevel)
-                            {
-                                solution.Clear();
-                                solution.Add(startWord);
-                                solution.Add(first);
-                                solution.Add(second);
-                                solution.Add(third);
-                                solution.Add(fourth);
-
-                                if (!solution.Contains(fifth))
-                                {
-                                    solution.Add(fifth);
-                                }
-                                else
-                                {
-                                    continue;
-                                }
-
-                                if (fifth == endWord)
-                                {
-                                    results.Add(new Tuple<int, List<string>>(solution.Count, new List<string>(solution)));
-                                    break;
-                                }
-
-                                if (results.Any(r => r.Item1 < 7))
-                                {
-                                    break;
-                                }
-
-                                // Get the sixth level (movements from the fifth level)
-                                var sixthLevel = wordMovements.First(w => w.WordString == fifth).NextWords;
-
-                                foreach (var sixth in sixthLevel)
-                                {
-                                    solution.Clear();
-                                    solution.Add(startWord);
-                                    solution.Add(first);
-                                    solution.Add(second);
-                                    solution.Add(third);
-                                    solution.Add(fourth);
-                                    solution.Add(fifth);
-
-                                    if (!solution.Contains(sixth))
-                                    {
-                                        solution.Add(sixth);
-                                    }
-                                    else
-                                    {
-                                        continue;
-                                    }
-
-                                    if (sixth == endWord)
-                                    {
-                                        results.Add(new Tuple<int, List<string>>(solution.Count, new List<string>(solution)));
-                                        break;
-                                    }
-
-                                    if (results.Any(r => r.Item1 < 8))
-                                    {
-                                        break;
-                                    }
-
-                                    // Get the seventh level (movements from the sixth level)
-                                    var seventhLevel = wordMovements.First(w => w.WordString == sixth).NextWords;
-
-                                    foreach (var seventh in seventhLevel)
-                                    {
-                                        solution.Clear();
-                                        solution.Add(startWord);
-                                        solution.Add(first);
-                                        solution.Add(second);
-                                        solution.Add(third);
-                                        solution.Add(fourth);
-                                        solution.Add(fifth);
-                                        solution.Add(sixth);
-
-                                        if (!solution.Contains(seventh))
-                                        {
-                                            solution.Add(seventh);
-                                        }
-                                        else
-                                        {
-                                            continue;
-                                        }
-
-                                        if (seventh == endWord)
-                                        {
-                                            results.Add(new Tuple<int, List<string>>(solution.Count, new List<string>(solution)));
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
-            }
+                else
+                {
+                    // Go deeper in the tree to find the solution
+                    FindEndWord(word, ref solution, maximumDepth);
+                }
 
-            return results;
+                solution.RemoveAt(solution.Count - 1);
+            }
         }
     }
 }

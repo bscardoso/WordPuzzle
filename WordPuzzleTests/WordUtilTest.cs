@@ -12,15 +12,15 @@ namespace WordPuzzleTests
             // Arrange & Act
             WordPuzzle.WordUtil util = new WordPuzzle.WordUtil("same", "cost", "./words/words-english.txt", "output-answer.txt");
 
-            var result = util.GetShortestWordPuzzleSolution();
+            util.GetShortestWordPuzzleSolution();
 
             // Assert
-            Assert.AreEqual(5, result.Count);
-            Assert.AreEqual("same", result[0]);
-            Assert.AreEqual("came", result[1]);
-            Assert.AreEqual("case", result[2]);
-            Assert.AreEqual("cast", result[3]);
-            Assert.AreEqual("cost", result[4]);
+            Assert.AreEqual(5, util.FinalSolution.Count);
+            Assert.AreEqual("same", util.FinalSolution[0]);
+            Assert.AreEqual("came", util.FinalSolution[1]);
+            Assert.AreEqual("case", util.FinalSolution[2]);
+            Assert.AreEqual("cast", util.FinalSolution[3]);
+            Assert.AreEqual("cost", util.FinalSolution[4]);
         }
 
         [TestMethod]
@@ -29,15 +29,15 @@ namespace WordPuzzleTests
             // Arrange & Act
             WordPuzzle.WordUtil util = new WordPuzzle.WordUtil("cost", "same", "./words/words-english.txt", "output-answer.txt");
 
-            var result = util.GetShortestWordPuzzleSolution();
+            util.GetShortestWordPuzzleSolution();
 
             // Assert
-            Assert.AreEqual(5, result.Count);
-            Assert.AreEqual("cost", result[0]);
-            Assert.AreEqual("cast", result[1]);
-            Assert.AreEqual("case", result[2]);
-            Assert.AreEqual("came", result[3]);
-            Assert.AreEqual("same", result[4]);
+            Assert.AreEqual(5, util.FinalSolution.Count);
+            Assert.AreEqual("cost", util.FinalSolution[0]);
+            Assert.AreEqual("cast", util.FinalSolution[1]);
+            Assert.AreEqual("case", util.FinalSolution[2]);
+            Assert.AreEqual("came", util.FinalSolution[3]);
+            Assert.AreEqual("same", util.FinalSolution[4]);
         }
 
         [TestMethod]
@@ -46,17 +46,17 @@ namespace WordPuzzleTests
             // Arrange & Act
             WordPuzzle.WordUtil util = new WordPuzzle.WordUtil("baby", "feel", "./words/words-english.txt", "output-answer.txt");
 
-            var result = util.GetShortestWordPuzzleSolution();
+            util.GetShortestWordPuzzleSolution();
 
             // Assert
-            Assert.AreEqual(7, result.Count);
-            Assert.AreEqual("baby", result[0]);
-            Assert.AreEqual("babe", result[1]);
-            Assert.AreEqual("bale", result[2]);
-            Assert.AreEqual("ball", result[3]);
-            Assert.AreEqual("bell", result[4]);
-            Assert.AreEqual("fell", result[5]);
-            Assert.AreEqual("feel", result[6]);
+            Assert.AreEqual(7, util.FinalSolution.Count);
+            Assert.AreEqual("baby", util.FinalSolution[0]);
+            Assert.AreEqual("babe", util.FinalSolution[1]);
+            Assert.AreEqual("bale", util.FinalSolution[2]);
+            Assert.AreEqual("ball", util.FinalSolution[3]);
+            Assert.AreEqual("bell", util.FinalSolution[4]);
+            Assert.AreEqual("fell", util.FinalSolution[5]);
+            Assert.AreEqual("feel", util.FinalSolution[6]);
         }
 
         [TestMethod]

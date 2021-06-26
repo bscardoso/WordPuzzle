@@ -22,13 +22,13 @@ namespace WordPuzzle
 
             // Find the shortest solution for the word puzzle
             WordUtil util = new WordUtil(startWord, endWord, wordsFile, answerFile);
-            var finalList = util.GetShortestWordPuzzleSolution();
+            util.GetShortestWordPuzzleSolution();
 
             // Write the shortest solution in the answer file provided
-            File.WriteAllText(answerFile, string.Join(Environment.NewLine, finalList));
+            File.WriteAllText(answerFile, string.Join(Environment.NewLine, util.FinalSolution));
 
             // Write the shorted solution in the console
-            Console.WriteLine(string.Join(Environment.NewLine, finalList));
+            Console.WriteLine(string.Join(Environment.NewLine, util.FinalSolution));
             Console.ReadLine();
         }
     }
