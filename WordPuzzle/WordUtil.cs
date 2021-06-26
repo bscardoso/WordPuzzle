@@ -89,7 +89,7 @@ namespace WordPuzzle
         /// <param name="currentWord"></param>
         /// <param name="wordsList"></param>
         /// <returns>List of words</returns>
-        public List<string> GetNextWordsList(string currentWord, Dictionary<string, int> wordsList)
+        private List<string> GetNextWordsList(string currentWord, Dictionary<string, int> wordsList)
         {
             var nextWords = new List<string>();
 
@@ -127,7 +127,7 @@ namespace WordPuzzle
         /// </summary>
         /// <param name="wordsList"></param>
         /// <returns>List of words possible movements</returns>
-        public void LoadWordMovements(Dictionary<string, int> wordsList)
+        private void LoadWordMovements(Dictionary<string, int> wordsList)
         {
             foreach (var word in wordsList)
             {
@@ -139,7 +139,7 @@ namespace WordPuzzle
         /// <summary>
         /// Find all the possible movements until we reach the end word
         /// </summary>
-        public void FindWordPuzzleSolutions()
+        private void FindWordPuzzleSolutions()
         {
             var solution = new List<string>();
 
